@@ -11,13 +11,21 @@ BINDIR = ./
 
 TARGET = $(BINDIR)whiteboard
 
+UNAME  = $(shell uname)
+ifeq ($(UNAME), Linux)
+  SDL = -lSDL2
+endif
+ifeq ($(UNAME), Darwin)
+  SDL = "-framework SDL2"
+endif
+
 C_SOURCES  = $(wildcard $(SRCDIR)*.c)
 OBJECTS = $(subst .c,.o,$(subst $(SRCDIR),$(OBJDIR),$(C_SOURCES)))
 INTERMEDIATE_FILES = $(OBJDIR)*.o $(OBJDIR)*.d $(TARGET)
 DEPFILES = $(patsubst $(SRCDIR)%.c,$(OBJDIR)%.d,$(C_SOURCES))
 CC = gcc
-SDL = -lSDL2
 CFLAGS += -Wall
+
 
 # LFLAGS += -g
 # CFLAGS += -g
