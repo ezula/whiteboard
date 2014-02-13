@@ -1,3 +1,9 @@
+# Whiteboard
+# Authors: Mikael Svens and Henrik Alnestig
+# Date: 2014-02-13
+#
+# Makefile.
+
 OBJDIR = ./obj/
 SRCDIR = ./src/
 INCDIR = ./src/
@@ -29,6 +35,7 @@ all: $(TARGET)
 include $(DEPFILES)
 
 $(OBJDIR)%.d: $(SRCDIR)%.c
+	test -d $(OBJDIR) || mkdir $(OBJDIR);
 	set -e; $(CC) -MM -MG $(CFLAGS) -I$(INCDIR) $< \
 	| sed -n -e "sW\($*\)\.o[ :]*W$(OBJDIR)\1.o $@ : Wg" -e "p" > $@
 

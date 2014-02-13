@@ -1,10 +1,11 @@
-/* 
- * THIS IS THE MAIN FILE
- * 
+/* Whiteboard
+ * Authors: Mikael Svens and Henrik Alnestig
+ * Date: 2014-02-13
  *
+ * main.c.
  */
 
- int main()
+ int main(void)
  {
  	return 0;
  }
