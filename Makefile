@@ -16,17 +16,17 @@ OBJECTS = $(subst .c,.o,$(subst $(SRCDIR),$(OBJDIR),$(C_SOURCES)))
 INTERMEDIATE_FILES = $(OBJDIR)*.o $(OBJDIR)*.d $(TARGET)
 DEPFILES = $(patsubst $(SRCDIR)%.c,$(OBJDIR)%.d,$(C_SOURCES))
 CC = gcc
-
+SDL = -lSDL2
 CFLAGS += -Wall
 
 # LFLAGS += -g
 # CFLAGS += -g
 
-LINK = $(CC) $(LFLAGS) -o $@ $^
-COMPILE = $(CC) -I$(INCDIR) $(CFLAGS) -o $@ -c $<
+LINK = $(CC) $(LFLAGS) -o $@ $^ $(SDL)
+COMPILE = $(CC) -I$(INCDIR) $(CFLAGS) -o $@ -c $< $(SDL)
 
 vpath %.c $(SRCDIR)
-vpath %.o $(OBJDIR)
+vpath %.o $(OBJDIR)	
 
 .PHONY: clean all
 

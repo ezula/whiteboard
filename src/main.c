@@ -5,7 +5,8 @@
  * main.c.
  */
 
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_video.h>
 #include <stdio.h>
 
 int main(void)
@@ -16,8 +17,7 @@ int main(void)
     SDL_Event event;
 
     SDL_Init(SDL_INIT_EVERYTHING);
-    SDL_WM_SetCaption("Hello World! :D", NULL);
-    SDL_SetVideoMode(800, 600, 32, SDL_HWSURFACE);
+    SDL_CreateWindow("Hello World!", 100, 100, 640, 480,SDL_WINDOW_SHOWN);
     while (gogogo) {
         SDL_WaitEvent(&event);
         if (event.type == SDL_QUIT)
