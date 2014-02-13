@@ -16,7 +16,7 @@ ifeq ($(UNAME), Linux)
   SDL = -lSDL2
 endif
 ifeq ($(UNAME), Darwin)
-  SDL = "-framework SDL2"
+  SDL = -framework SDL2
 endif
 
 C_SOURCES  = $(wildcard $(SRCDIR)*.c)
