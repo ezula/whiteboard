@@ -8,10 +8,11 @@
 #include <SDL2/SDL.h>
 #include <stdio.h>
 #include <time.h>
+#include <unistd.h>
 
 int main(void)
 {
-	printf("hej");
+	printf("hej\n");
 
     int loop;
     SDL_Event event;
@@ -21,8 +22,12 @@ int main(void)
     int fpsClock;
     int realfps, fpscount;
 
-    SDL_Init(SDL_INIT_EVERYTHING);
-    window = SDL_CreateWindow("Hello World!", 100, 100, 640, 480,SDL_WINDOW_SHOWN);
+    if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
+        printf("Initialization error: %s\n", SDL_GetError());
+        exit(EXIT_FAILURE);
+    }
+
+    window = SDL_CreateWindow("Hello World!", 100, 100, 640, 480, SDL_WINDOW_SHOWN);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     
     rect.x = 100;
@@ -34,12 +39,23 @@ int main(void)
     realfps = 0;
     fpscount = 0;
 
-    fpsClock = time(NULL);
-    while (loop) {
-        SDL_WaitEvent(&event);
-        if (event.type == SDL_QUIT)
-            loop = 0;
+    int mx, my;
 
+    fpsClock = time(NULL);
+
+    while (loop) {
+
+        SDL_WaitEvent(&event);
+
+        do
+        {
+            /* If a quit event has been sent */
+            if (event.type == SDL_QUIT)
+            {
+                /* Quit the application */
+                loop = 0;
+            }
+        } while(SDL_PollEvent(&event));
 
         // calculate fps
         fpscount++;
@@ -49,6 +65,12 @@ int main(void)
             fpsClock = time(NULL);
         }
 
+        if (SDL_GetMouseState(&mx, &my) & SDL_BUTTON(1)) {
+            printf("MX: %d, MY: %d\n", mx, my);
+        }
+
+        printf("FPS: %d\n", realfps);
+
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
         SDL_RenderClear(renderer);
         SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
@@ -56,6 +78,7 @@ int main(void)
         //SDL_RenderDraw
         SDL_RenderPresent(renderer);
     }
+
     SDL_Quit();
     return 0;
 }
