@@ -53,7 +53,7 @@ int main(void)
         SDL_RenderClear(renderer);
         SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
         SDL_RenderFillRect(renderer, &rect);
-        SDL_RenderDrawText()
+        //SDL_RenderDraw
         SDL_RenderPresent(renderer);
     }
     SDL_Quit();
