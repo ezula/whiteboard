@@ -9,9 +9,97 @@
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
+#include "linkedlist.h"
 
-int main(void)
-{
+#define STATE_NOTHING 0
+#define STATE_DRAWING 1
+
+typedef struct Shape {
+    SDL_Point *points;
+    SDL_Color color;
+    int thickness;
+    int count;
+    int capacity;
+} Shape;
+
+void initShape(Shape *shape) {
+    shape->capacity = 50; //Start off with 50 points.
+    shape->points = malloc((shape->capacity)*sizeof(SDL_Point)); 
+    shape->count = 0;
+}
+
+int sqDistance(const SDL_Point *p1, const SDL_Point *p2) {
+    return (p1->x - p2->x) * (p1->x - p2->x) + (p1->y - p2->y) * (p1->y - p2->y);
+}
+
+void removeRedundantPoints(Shape *shape) {
+    SDL_Point *p;
+    SDL_Point *q;
+    SDL_Point *r;
+    int i, j, det, pr, pq, qr, isLastRedundant, removed;
+
+    isLastRedundant = 0;
+    removed = 0;
+
+    for (i = 2; i < shape->count; ++i) {
+        //Check if r is on the line made up by p and q.
+        p = &shape->points[i - 2];
+        q = &shape->points[i - 1];
+        r = &shape->points[i];
+        //Calculate determinant as described here: http://stackoverflow.com/a/907491
+        det = (q->x - p->x) * (r->y - p->y) - (q->y - p->y) * (r->x - p->x);
+        pr = sqDistance(p, r);
+        pq = sqDistance(p, q);
+        qr = sqDistance(q, r);
+        if (det == 0 && pr > pq && pr > qr) { //q needs to be BETWEEN p and r
+            if (isLastRedundant) {
+                //q of previous round, which is now p, is unneccesary.
+                //Mark it so by e.g. setting its x value to -1.
+                p->x = -1;
+                removed++;
+            }
+
+            //We can't remove a redundant point on the same round it was found,
+            //since the NEXT point needs to be redundant as well.
+            isLastRedundant = 1;
+        }
+        else
+            isLastRedundant = 0;
+    }
+
+    //Make a new list containting exactly all needed points with no extra space.
+    SDL_Point *newPoints = malloc((shape->count - removed)*sizeof(SDL_Point));
+    j = 0;
+    for (i = 0; i < shape->count; ++i) {
+        if (shape->points[i].x != -1) {
+            newPoints[j] = shape->points[i];
+            j++;
+        }
+    }
+    shape->points = newPoints;
+    shape->count -= removed;
+    shape->capacity = shape->count;
+}
+
+void addPoint(Shape *shape, const SDL_Point point) {
+    if (shape->capacity == shape->count) { //If it's full
+        SDL_Point *newPoints = malloc(2*(shape->capacity)*sizeof(SDL_Point));
+        memcpy(newPoints, shape->points, shape->count*sizeof(SDL_Point));
+        free(shape->points);
+        shape->points = newPoints;
+        shape->capacity *= 2; //Capacity doubled.
+    }
+    shape->points[shape->count] = point;
+    shape->count++;
+}
+
+void drawShapeCallback(void * renderer, void * shape) {
+    Shape *s = (Shape *)shape;
+    SDL_SetRenderDrawColor(renderer, s->color.r, s->color.g, s->color.b, s->color.a);
+    SDL_RenderDrawLines(renderer, s->points, s->count);
+}
+
+int main(void) {
 	printf("hej\n");
 
     int loop;
@@ -20,7 +108,10 @@ int main(void)
     SDL_Renderer *renderer;
     SDL_Rect rect;
     int fpsClock;
-    int realfps, fpscount;
+    int realfps, fpscount, state;
+    linked_list_t shapes;
+    Shape *shape;
+    SDL_Point p;
 
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
         printf("Initialization error: %s\n", SDL_GetError());
@@ -39,7 +130,9 @@ int main(void)
     realfps = 0;
     fpscount = 0;
 
-    int mx, my;
+    ll_init(&shapes);
+    state = 0;
+    srand(time(NULL));
 
     fpsClock = time(NULL);
 
@@ -47,13 +140,37 @@ int main(void)
 
         SDL_WaitEvent(&event);
 
-        do
-        {
-            /* If a quit event has been sent */
-            if (event.type == SDL_QUIT)
-            {
-                /* Quit the application */
-                loop = 0;
+        do {
+            switch (event.type) {
+                case SDL_QUIT:
+                    /* Quit the application */
+                    loop = 0;
+                    break;
+                case SDL_MOUSEBUTTONDOWN:
+                    if (event.button.button == SDL_BUTTON_LEFT) {
+                        shape = malloc(sizeof(Shape));
+                        initShape(shape);
+                        ll_add(&shapes, shape);
+                        shape->color.r = rand() % 255;
+                        shape->color.g = rand() % 255;
+                        shape->color.b = rand() % 255;
+                        shape->color.a = rand() % 255;
+                        state = STATE_DRAWING;
+                    }
+                    break;
+                case SDL_MOUSEBUTTONUP:
+                    if (event.button.button == SDL_BUTTON_LEFT) {
+                        state = STATE_NOTHING;
+                        removeRedundantPoints(shape);
+                    }
+                    break;
+                case SDL_MOUSEMOTION:
+                    if (state == STATE_DRAWING) {
+                        p.x = event.motion.x;
+                        p.y = event.motion.y;
+                        addPoint(shape, p);
+                    }
+                    break;
             }
         } while(SDL_PollEvent(&event));
 
@@ -65,9 +182,9 @@ int main(void)
             fpsClock = time(NULL);
         }
 
-        if (SDL_GetMouseState(&mx, &my) & SDL_BUTTON(1)) {
-            printf("MX: %d, MY: %d\n", mx, my);
-        }
+        // if (SDL_GetMouseState(&mx, &my) & SDL_BUTTON(1)) {
+        //     printf("Janne!\n");
+        // }
 
         printf("FPS: %d\n", realfps);
 
@@ -75,7 +192,7 @@ int main(void)
         SDL_RenderClear(renderer);
         SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
         SDL_RenderFillRect(renderer, &rect);
-        //SDL_RenderDraw
+        ll_traverse(&shapes, renderer, drawShapeCallback);
         SDL_RenderPresent(renderer);
     }
 
