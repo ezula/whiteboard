@@ -25,7 +25,7 @@ OBJECTS = $(subst .c,.o,$(subst $(SRCDIR),$(OBJDIR),$(C_SOURCES)))
 INTERMEDIATE_FILES = $(OBJDIR)*.o $(OBJDIR)*.d $(TARGET)
 DEPFILES = $(patsubst $(SRCDIR)%.c,$(OBJDIR)%.d,$(C_SOURCES))
 CC = gcc
-CFLAGS += -Wall
+CFLAGS += -Wall -O3
 
 
 # LFLAGS += -g

@@ -77,6 +77,7 @@ void removeRedundantPoints(Shape *shape) {
             j++;
         }
     }
+    free(shape->points);
     shape->points = newPoints;
     shape->count -= removed;
     shape->capacity = shape->count;
@@ -92,20 +93,27 @@ void addPoint(Shape *shape, const SDL_Point point) {
     }
     shape->points[shape->count] = point;
     shape->count++;
+    printf("Count: %d\n", shape->count);
 }
 
 void drawShapeCallback(void * renderer, void * shape) {
     Shape *s = (Shape *)shape;
     int i;
     SDL_SetRenderDrawColor(renderer, s->color.r, s->color.g, s->color.b, s->color.a);
-    //SDL_RenderDrawLines(renderer, s->points, s->count);
-    for (i = 0; i < s->count - 1; ++i) {
-        aalineRGBA(renderer, s->points[i].x, s->points[i].y, s->points[i+1].x, 
-            s->points[i+1].y, s->color.r, s->color.g, s->color.b, s->color.a);
-        //filledCircleRGBA(renderer, s->points[i].x, s->points[i].y, s->thickness * 0.5, 
-            //s->color.r, s->color.g, s->color.b, s->color.a);
-    }
-    //filledCircleRGBA(renderer, s->points[i].x, s->points[i].y, s->thickness * 0.5, s->color.r, s->color.g, s->color.b, s->color.a);
+    SDL_RenderDrawLines(renderer, s->points, s->count);
+//    for (i = 0; i < s->count - 1; ++i) {
+ //       thickLineRGBA(renderer, s->points[i].x, s->points[i].y, s->points[i+1].x, 
+  //          s->points[i+1].y, s->thickness, s->color.r, s->color.g, s->color.b, s->color.a);
+   //     filledCircleRGBA(renderer, s->points[i].x, s->points[i].y, s->thickness * 0.5, 
+    //        s->color.r, s->color.g, s->color.b, s->color.a);
+   // }
+   // filledCircleRGBA(renderer, s->points[i].x, s->points[i].y, s->thickness * 0.5, s->color.r, s->color.g, s->color.b, s->color.a);
+}
+
+void freeShapeCallback(void * null, void * shape) {
+    Shape *s = (Shape *)shape;
+    free(s->points);
+    free(s);
 }
 
 int main(void) {
@@ -115,26 +123,20 @@ int main(void) {
     SDL_Event event;
     SDL_Window *window;
     SDL_Renderer *renderer;
-    SDL_Rect rect;
     int fpsClock;
     int realfps, fpscount, state;
     linked_list_t shapes;
     Shape *shape;
     SDL_Point p;
 
-    if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         printf("Initialization error: %s\n", SDL_GetError());
         exit(EXIT_FAILURE);
     }
 
-    window = SDL_CreateWindow("Hello World!", 100, 100, 640, 480, SDL_WINDOW_SHOWN);
+    window = SDL_CreateWindow("Whiteboard", 100, 100, 640, 480, SDL_WINDOW_SHOWN);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     
-    rect.x = 100;
-    rect.y = 100;
-    rect.w = 100;
-    rect.h = 100;
-
     loop = 1;
     realfps = 0;
     fpscount = 0;
@@ -200,12 +202,15 @@ int main(void) {
 
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
         SDL_RenderClear(renderer);
-        SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
-        SDL_RenderFillRect(renderer, &rect);
         ll_traverse(&shapes, renderer, drawShapeCallback);
         SDL_RenderPresent(renderer);
     }
+    ll_traverse(&shapes, NULL, freeShapeCallback);
+    ll_free(&shapes);
 
+    //Clean up
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
     SDL_Quit();
     return 0;
 }
