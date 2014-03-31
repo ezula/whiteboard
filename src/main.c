@@ -16,6 +16,29 @@
 #define STATE_NOTHING 0
 #define STATE_DRAWING 1
 
+void enableAntiAliasing() {
+    //Anti-aliasing
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+    glEnable(GL_MULTISAMPLE);
+    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+    glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+    glEnable(GL_LINE_SMOOTH);
+    glEnable(GL_POLYGON_SMOOTH);   
+}
+
+void undo(linked_list_t *shapes, linked_list_t *undoShapes) {
+    if (!shapes->last) return;
+    ll_add(undoShapes, shapes->last->data);
+    ll_delete(shapes, shapes->last);
+}
+
+void redo(linked_list_t *shapes, linked_list_t *undoShapes) {
+    if (!undoShapes->last) return;
+    ll_add(shapes, undoShapes->last->data);
+    ll_delete(undoShapes, undoShapes->last);
+}
+
 int main(void) {
     int loop;
     SDL_Event event;
@@ -24,7 +47,7 @@ int main(void) {
     int fpsClock;
     int realfps, fpscount, state;
     linked_list_t shapes;
-    linked_list_t undoBuffer;
+    linked_list_t undoShapes;
     Shape *shape;
     SDL_Point p;
 
@@ -36,22 +59,14 @@ int main(void) {
     window = SDL_CreateWindow("Whiteboard", 100, 100, 640, 480, SDL_WINDOW_SHOWN);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
-
-    glEnable(GL_MULTISAMPLE);
-
-    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST );
-    glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST );
-     
-    glEnable(GL_LINE_SMOOTH);
-    glEnable(GL_POLYGON_SMOOTH);
+    enableAntiAliasing();
     
     loop = 1;
     realfps = 0;
     fpscount = 0;
 
     ll_init(&shapes);
+    ll_init(&undoShapes);
     state = 0;
     srand(time(NULL));
 
@@ -84,6 +99,8 @@ int main(void) {
                     if (event.button.button == SDL_BUTTON_LEFT) {
                         state = STATE_NOTHING;
                         removeRedundantPoints(shape);
+                        //A new shape was drawn, so we are unable to redo old shapes.
+                        ll_traverse_delete(&undoShapes, freeShapeCallback);
                     }
                     break;
                 case SDL_MOUSEMOTION:
@@ -92,6 +109,23 @@ int main(void) {
                         p.y = event.motion.y;
                         addPoint(shape, p);
                     }
+                    break;
+                case SDL_KEYDOWN:
+                    switch (event.key.keysym.sym) {
+                        case SDLK_z:
+                            if (event.key.keysym.mod & KMOD_CTRL) {
+                                if (event.key.keysym.mod & KMOD_SHIFT)
+                                    redo(&shapes, &undoShapes); //CTRL+SHIFT+Z
+                                else
+                                    undo(&shapes, &undoShapes); //CTRL+Z, undo!
+                            }
+                            break;
+                        case SDLK_y:
+                            if (event.key.keysym.mod & KMOD_CTRL) {
+                                redo(&shapes, &undoShapes); //CTRL+Y
+                            }
+                            break;
+                    } 
                     break;
             }
         } while(SDL_PollEvent(&event));
@@ -111,10 +145,13 @@ int main(void) {
         ll_traverse(&shapes, renderer, drawShapeCallback);
         SDL_RenderPresent(renderer);
     }
-    ll_traverse(&shapes, NULL, freeShapeCallback);
-    ll_free(&shapes);
-
+    
     //Clean up
+    ll_traverse_delete(&shapes, freeShapeCallback);
+    ll_free(&shapes);
+    ll_traverse_delete(&undoShapes, freeShapeCallback);
+    ll_free(&undoShapes);
+
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();

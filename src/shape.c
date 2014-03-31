@@ -84,8 +84,9 @@ void drawShapeCallback(void * renderer, void * shape) {
     SDL_RenderDrawLines(renderer, s->points, s->count);
 }
 
-void freeShapeCallback(void * null, void * shape) {
+int freeShapeCallback(void * shape) {
     Shape *s = (Shape *)shape;
     free(s->points);
     free(s);
+    return 1;
 }

@@ -14,4 +14,4 @@ int sqDistance(const SDL_Point *p1, const SDL_Point *p2);
 void removeRedundantPoints(Shape *shape);
 void addPoint(Shape *shape, const SDL_Point point);
 void drawShapeCallback(void * renderer, void * shape);
-void freeShapeCallback(void * null, void * shape);
+int freeShapeCallback(void * shape);
