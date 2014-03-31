@@ -20,6 +20,7 @@ ifeq ($(UNAME), Darwin)
 endif
 
 C_SOURCES  = $(wildcard $(SRCDIR)*.c)
+C_SOURCES += $(wildcard $(SRCDIR)SDL2_gfx/*.c)
 OBJECTS = $(subst .c,.o,$(subst $(SRCDIR),$(OBJDIR),$(C_SOURCES)))
 INTERMEDIATE_FILES = $(OBJDIR)*.o $(OBJDIR)*.d $(TARGET)
 DEPFILES = $(patsubst $(SRCDIR)%.c,$(OBJDIR)%.d,$(C_SOURCES))
@@ -30,8 +31,8 @@ CFLAGS += -Wall
 # LFLAGS += -g
 # CFLAGS += -g
 
-LINK = $(CC) $(LFLAGS) -o $@ $^ $(SDL)
-COMPILE = $(CC) -I$(INCDIR) $(CFLAGS) -o $@ -c $< $(SDL)
+LINK = $(CC) $(LFLAGS) -o $@ $^ $(SDL) -lm
+COMPILE = $(CC) -I$(INCDIR) $(CFLAGS) -o $@ -c $< $(SDL) -lm
 
 vpath %.c $(SRCDIR)
 vpath %.o $(OBJDIR)	
@@ -44,6 +45,7 @@ include $(DEPFILES)
 
 $(OBJDIR)%.d: $(SRCDIR)%.c
 	test -d $(OBJDIR) || mkdir $(OBJDIR);
+	test -d $(OBJDIR)SDL2_gfx || mkdir $(OBJDIR)SDL2_gfx;
 	set -e; $(CC) -MM -MG $(CFLAGS) -I$(INCDIR) $< \
 	| sed -n -e "sW\($*\)\.o[ :]*W$(OBJDIR)\1.o $@ : Wg" -e "p" > $@
 

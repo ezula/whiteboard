@@ -10,6 +10,7 @@
 #include <time.h>
 #include <unistd.h>
 #include "linkedlist.h"
+#include "SDL2_gfx/SDL2_gfxPrimitives.h"
 
 #define STATE_NOTHING 0
 #define STATE_DRAWING 1
@@ -95,8 +96,16 @@ void addPoint(Shape *shape, const SDL_Point point) {
 
 void drawShapeCallback(void * renderer, void * shape) {
     Shape *s = (Shape *)shape;
+    int i;
     SDL_SetRenderDrawColor(renderer, s->color.r, s->color.g, s->color.b, s->color.a);
-    SDL_RenderDrawLines(renderer, s->points, s->count);
+    //SDL_RenderDrawLines(renderer, s->points, s->count);
+    for (i = 0; i < s->count - 1; ++i) {
+        aalineRGBA(renderer, s->points[i].x, s->points[i].y, s->points[i+1].x, 
+            s->points[i+1].y, s->color.r, s->color.g, s->color.b, s->color.a);
+        //filledCircleRGBA(renderer, s->points[i].x, s->points[i].y, s->thickness * 0.5, 
+            //s->color.r, s->color.g, s->color.b, s->color.a);
+    }
+    //filledCircleRGBA(renderer, s->points[i].x, s->points[i].y, s->thickness * 0.5, s->color.r, s->color.g, s->color.b, s->color.a);
 }
 
 int main(void) {
@@ -154,7 +163,8 @@ int main(void) {
                         shape->color.r = rand() % 255;
                         shape->color.g = rand() % 255;
                         shape->color.b = rand() % 255;
-                        shape->color.a = rand() % 255;
+                        shape->color.a = 255;
+                        shape->thickness = 4;
                         state = STATE_DRAWING;
                     }
                     break;
