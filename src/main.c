@@ -6,6 +6,7 @@
  */
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_opengl.h>
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
@@ -100,15 +101,17 @@ void drawShapeCallback(void * renderer, void * shape) {
     Shape *s = (Shape *)shape;
     int i;
     SDL_SetRenderDrawColor(renderer, s->color.r, s->color.g, s->color.b, s->color.a);
+    
+    glLineWidth(5);
     SDL_RenderDrawLines(renderer, s->points, s->count);
-//    for (i = 0; i < s->count - 1; ++i) {
- //       thickLineRGBA(renderer, s->points[i].x, s->points[i].y, s->points[i+1].x, 
-  //          s->points[i+1].y, s->thickness, s->color.r, s->color.g, s->color.b, s->color.a);
-   //     filledCircleRGBA(renderer, s->points[i].x, s->points[i].y, s->thickness * 0.5, 
-    //        s->color.r, s->color.g, s->color.b, s->color.a);
-   // }
-   // filledCircleRGBA(renderer, s->points[i].x, s->points[i].y, s->thickness * 0.5, s->color.r, s->color.g, s->color.b, s->color.a);
-}
+/*   for (i = 0; i < s->count - 1; ++i) {
+       thickLineRGBA(renderer, s->points[i].x, s->points[i].y, s->points[i+1].x, 
+           s->points[i+1].y, s->thickness, s->color.r, s->color.g, s->color.b, s->color.a);
+       filledCircleRGBA(renderer, s->points[i].x, s->points[i].y, s->thickness * 0.5, 
+           s->color.r, s->color.g, s->color.b, s->color.a);
+   }
+   filledCircleRGBA(renderer, s->points[i].x, s->points[i].y, s->thickness * 0.5, s->color.r, s->color.g, s->color.b, s->color.a);
+*/}
 
 void freeShapeCallback(void * null, void * shape) {
     Shape *s = (Shape *)shape;
@@ -197,6 +200,7 @@ int main(void) {
         // if (SDL_GetMouseState(&mx, &my) & SDL_BUTTON(1)) {
         //     printf("Janne!\n");
         // }
+
 
         printf("FPS: %d\n", realfps);
 

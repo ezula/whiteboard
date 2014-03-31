@@ -13,10 +13,10 @@ TARGET = $(BINDIR)whiteboard
 
 UNAME  = $(shell uname)
 ifeq ($(UNAME), Linux)
-  SDL = -lSDL2
+  SDL = -lSDL2 -lGL
 endif
 ifeq ($(UNAME), Darwin)
-  SDL = -framework SDL2
+  SDL = -framework SDL2 -framework OpenGL
 endif
 
 C_SOURCES  = $(wildcard $(SRCDIR)*.c)
