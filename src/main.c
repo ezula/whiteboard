@@ -99,19 +99,14 @@ void addPoint(Shape *shape, const SDL_Point point) {
 
 void drawShapeCallback(void * renderer, void * shape) {
     Shape *s = (Shape *)shape;
-    int i;
+
     SDL_SetRenderDrawColor(renderer, s->color.r, s->color.g, s->color.b, s->color.a);
-    
-    glLineWidth(5);
+
+    glEnable(GL_LINE_SMOOTH);
+    glLineWidth(s->thickness);
+
     SDL_RenderDrawLines(renderer, s->points, s->count);
-/*   for (i = 0; i < s->count - 1; ++i) {
-       thickLineRGBA(renderer, s->points[i].x, s->points[i].y, s->points[i+1].x, 
-           s->points[i+1].y, s->thickness, s->color.r, s->color.g, s->color.b, s->color.a);
-       filledCircleRGBA(renderer, s->points[i].x, s->points[i].y, s->thickness * 0.5, 
-           s->color.r, s->color.g, s->color.b, s->color.a);
-   }
-   filledCircleRGBA(renderer, s->points[i].x, s->points[i].y, s->thickness * 0.5, s->color.r, s->color.g, s->color.b, s->color.a);
-*/}
+}
 
 void freeShapeCallback(void * null, void * shape) {
     Shape *s = (Shape *)shape;
@@ -169,7 +164,7 @@ int main(void) {
                         shape->color.g = rand() % 255;
                         shape->color.b = rand() % 255;
                         shape->color.a = 255;
-                        shape->thickness = 4;
+                        shape->thickness = 5;
                         state = STATE_DRAWING;
                     }
                     break;
@@ -203,6 +198,7 @@ int main(void) {
 
 
         printf("FPS: %d\n", realfps);
+
 
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
         SDL_RenderClear(renderer);
