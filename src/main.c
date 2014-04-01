@@ -16,6 +16,12 @@
 #define STATE_NOTHING 0
 #define STATE_DRAWING 1
 
+#ifdef __APPLE__
+    #define MOD_KEY KMOD_GUI //Apple uses command key.
+#else
+    #define MOD_KEY KMOD_CTRL //Others use CTRL.
+#endif
+
 void enableAntiAliasing() {
     //Anti-aliasing
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
@@ -113,7 +119,7 @@ int main(void) {
                 case SDL_KEYDOWN:
                     switch (event.key.keysym.sym) {
                         case SDLK_z:
-                            if (event.key.keysym.mod & KMOD_CTRL) {
+                            if (event.key.keysym.mod & MOD_KEY) {
                                 if (event.key.keysym.mod & KMOD_SHIFT)
                                     redo(&shapes, &undoShapes); //CTRL+SHIFT+Z
                                 else
@@ -121,7 +127,7 @@ int main(void) {
                             }
                             break;
                         case SDLK_y:
-                            if (event.key.keysym.mod & KMOD_CTRL) {
+                            if (event.key.keysym.mod & MOD_KEY) {
                                 redo(&shapes, &undoShapes); //CTRL+Y
                             }
                             break;

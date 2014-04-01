@@ -13,10 +13,10 @@ TARGET = $(BINDIR)whiteboard
 
 UNAME  = $(shell uname)
 ifeq ($(UNAME), Linux)
-  SDL = -lSDL2 -lGL
+  SDL = -lSDL2 -lGL -lSDL2_net
 endif
 ifeq ($(UNAME), Darwin)
-  SDL = -framework SDL2 -framework OpenGL
+  SDL = -framework SDL2 -framework OpenGL -framework SDL2_net
 endif
 
 C_SOURCES  = $(wildcard $(SRCDIR)*.c)
@@ -31,8 +31,8 @@ CFLAGS += -Wall -O3
 # LFLAGS += -g
 # CFLAGS += -g
 
-LINK = $(CC) $(LFLAGS) -o $@ $^ $(SDL) -lm
-COMPILE = $(CC) -I$(INCDIR) $(CFLAGS) -o $@ -c $< $(SDL) -lm
+LINK = $(CC) $(LFLAGS) -o $@ $^ $(SDL)
+COMPILE = $(CC) -I$(INCDIR) $(CFLAGS) -o $@ -c $< $(SDL)
 
 vpath %.c $(SRCDIR)
 vpath %.o $(OBJDIR)	
