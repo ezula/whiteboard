@@ -45,7 +45,6 @@ include $(DEPFILES)
 
 $(OBJDIR)%.d: $(SRCDIR)%.c
 	test -d $(OBJDIR) || mkdir $(OBJDIR);
-	test -d $(OBJDIR)SDL2_gfx || mkdir $(OBJDIR)SDL2_gfx;
 	set -e; $(CC) -MM -MG $(CFLAGS) -I$(INCDIR) $< \
 	| sed -n -e "sW\($*\)\.o[ :]*W$(OBJDIR)\1.o $@ : Wg" -e "p" > $@
 

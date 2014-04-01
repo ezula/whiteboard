@@ -52,8 +52,7 @@ int main(void) {
     SDL_Renderer *renderer;
     int fpsClock;
     int realfps, fpscount, state;
-    linked_list_t shapes;
-    linked_list_t undoShapes;
+    linked_list_t ownShapes, othersShapes, undoShapes;
     Shape *shape;
     SDL_Point p;
 
@@ -71,7 +70,8 @@ int main(void) {
     realfps = 0;
     fpscount = 0;
 
-    ll_init(&shapes);
+    ll_init(&ownShapes);
+    ll_init(&othersShapes);
     ll_init(&undoShapes);
     state = 0;
     srand(time(NULL));
@@ -92,7 +92,7 @@ int main(void) {
                     if (event.button.button == SDL_BUTTON_LEFT) {
                         shape = malloc(sizeof(Shape));
                         initShape(shape);
-                        ll_add(&shapes, shape);
+                        ll_add(&ownShapes, shape);
                         shape->color.r = rand() % 255;
                         shape->color.g = rand() % 255;
                         shape->color.b = rand() % 255;
@@ -121,14 +121,14 @@ int main(void) {
                         case SDLK_z:
                             if (event.key.keysym.mod & MOD_KEY) {
                                 if (event.key.keysym.mod & KMOD_SHIFT)
-                                    redo(&shapes, &undoShapes); //CTRL+SHIFT+Z
+                                    redo(&ownShapes, &undoShapes); //CTRL+SHIFT+Z
                                 else
-                                    undo(&shapes, &undoShapes); //CTRL+Z, undo!
+                                    undo(&ownShapes, &undoShapes); //CTRL+Z, undo!
                             }
                             break;
                         case SDLK_y:
                             if (event.key.keysym.mod & MOD_KEY) {
-                                redo(&shapes, &undoShapes); //CTRL+Y
+                                redo(&ownShapes, &undoShapes); //CTRL+Y
                             }
                             break;
                     } 
@@ -148,15 +148,17 @@ int main(void) {
 
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
         SDL_RenderClear(renderer);
-        ll_traverse(&shapes, renderer, drawShapeCallback);
+        ll_traverse(&ownShapes, renderer, drawShapeCallback);
         SDL_RenderPresent(renderer);
     }
     
     //Clean up
-    ll_traverse_delete(&shapes, freeShapeCallback);
-    ll_free(&shapes);
+    ll_traverse_delete(&ownShapes, freeShapeCallback);
+    ll_free(&ownShapes);
     ll_traverse_delete(&undoShapes, freeShapeCallback);
     ll_free(&undoShapes);
+    ll_traverse_delete(&othersShapes, freeShapeCallback);
+    ll_free(&othersShapes);
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
