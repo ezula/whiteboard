@@ -12,6 +12,7 @@
 
 #include "linkedlist.h"
 #include "shape.h"
+#include "network.h"
 
 #define STATE_NOTHING 0
 #define STATE_DRAWING 1
@@ -45,7 +46,7 @@ void redo(linked_list_t *shapes, linked_list_t *undoShapes) {
     ll_delete(undoShapes, undoShapes->last);
 }
 
-int main(void) {
+int main(int argc, char* argv[]) {
     int loop;
     SDL_Event event;
     SDL_Window *window;
@@ -61,11 +62,25 @@ int main(void) {
         printf("Initialization error: %s\n", SDL_GetError());
         exit(EXIT_FAILURE);
     }
+
+    /* initialize SDL_net */
+    if (SDLNet_Init() == -1) {
+        printf("SDLNet_Init: %s\n",SDLNet_GetError());
+        exit(EXIT_FAILURE);
+    }
     
     window = SDL_CreateWindow("Whiteboard", 100, 100, 640, 480, SDL_WINDOW_SHOWN);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
     enableAntiAliasing();
+
+    if (argc != 3) {
+        printf("Too few arguments!\nUsage: ./whiteboard ip port\n");
+        return EXIT_FAILURE;
+    }
+
+    TCPsocket tsock;
+    tsock = Connect(argv[1], atoi(argv[2]));
     
     loop = 1;
     realfps = 0;
@@ -99,6 +114,8 @@ int main(void) {
                         shape->color.a = 255;
                         shape->thickness = 5;
                         state = STATE_DRAWING;
+
+                        
                     }
                     break;
                 case SDL_MOUSEBUTTONUP:
@@ -114,6 +131,8 @@ int main(void) {
                         p.x = event.motion.x;
                         p.y = event.motion.y;
                         addPoint(shape, p);
+
+
                     }
                     break;
                 case SDL_KEYDOWN:
