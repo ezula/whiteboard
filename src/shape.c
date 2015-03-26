@@ -72,7 +72,6 @@ void addPoint(Shape *shape, const SDL_Point point) {
     }
     shape->points[shape->count] = point;
     shape->count++;
-    printf("Count: %d\n", shape->count);
 }
 
 void drawShapeCallback(void * renderer, void * shape) {
@@ -80,8 +79,9 @@ void drawShapeCallback(void * renderer, void * shape) {
 
     //glEnable(GL_LINE_SMOOTH);
     SDL_SetRenderDrawColor(renderer, s->color.r, s->color.g, s->color.b, s->color.a);
-    glLineWidth(s->thickness);
-    SDL_RenderDrawLines(renderer, s->points, s->count);
+    //glLineWidth(s->thickness);
+    //SDL_RenderDrawLines(renderer, s->points, s->count);
+    glPolyline(s);
 }
 
 int freeShapeCallback(void * shape) {
@@ -89,4 +89,128 @@ int freeShapeCallback(void * shape) {
     free(s->points);
     free(s);
     return 1;
+}
+
+typedef struct SDL_FPoint {
+    float x;
+    float y;
+} SDL_FPoint;
+// v0 and v1 are normalized
+// t can vary between 0 and 1
+// http://number-none.com/product/Understanding%20Slerp,%20Then%20Not%20Using%20It/
+SDL_FPoint slerp2d(const SDL_FPoint *v0, const SDL_FPoint *v1, float t) {
+    float dot = v0->x * v1->x + v0->y * v1->y; //Dot product.
+    if( dot < -1.0f ) dot = -1.0f;
+    if( dot > 1.0f ) dot = 1.0f;
+
+    float theta_0 = acos(dot);
+    float theta = theta_0 * t;
+
+    SDL_FPoint v2;
+    v2.x = -v0->y;
+    v2.y = v0->x;
+
+    float sin_t = sin(theta);
+    float cos_t = cos(theta);
+
+    SDL_FPoint ret;
+    ret.x = v0->x*cos_t + v2.x*sin_t;
+    ret.y = v0->y*cos_t + v2.y*sin_t;
+    return ret;
+}
+
+void normalize(SDL_FPoint *p) {
+    float len = sqrt(p->x * p->x + p->y * p->y); //too slow?
+    float invlen = 1 / len;
+    p->x = p->x * invlen;
+    p->y = p->y * invlen;
+}
+
+void glPolyline(const Shape *shape) {
+    if(shape->count < 2) return;
+    size_t i, j;
+    float w = shape->thickness / 2.0f;
+    SDL_FPoint a, a_perp, b, b_perp, p0, p1, p2, p3;
+    const SDL_Point *cur, *nxt, *prv;
+
+    glBegin(GL_TRIANGLES);
+    for(i = 0; i < shape->count-1; ++i) {
+        cur = &shape->points[i];
+        nxt = &shape->points[i+1];
+
+        b.x = nxt->x - cur->x;
+        b.y = nxt->y - cur->y;
+        normalize(&b);
+        b_perp.x = -b.y;
+        b_perp.y = b.x;
+
+        p0.x = cur->x + b_perp.x*w;
+        p0.y = cur->y + b_perp.y*w;
+
+        p1.x = cur->x - b_perp.x*w;
+        p1.y = cur->y - b_perp.y*w;
+
+        p2.x = nxt->x + b_perp.x*w;
+        p2.y = nxt->y + b_perp.y*w;
+
+        p3.x = nxt->x - b_perp.x*w;
+        p3.y = nxt->y - b_perp.y*w;
+
+        // first triangle
+        glVertex2f(p0.x, p0.y);
+        glVertex2f(p1.x, p1.y);
+        glVertex2f(p2.x, p2.y);
+        // second triangle
+        glVertex2f(p2.x, p2.y);
+        glVertex2f(p1.x, p1.y);
+        glVertex2f(p3.x, p3.y);
+
+        // only do joins when we have a prv
+        if(i == 0) continue;
+
+        prv = &shape->points[i-1];
+        a.x = prv->x - cur->x;
+        a.y = prv->y - cur->y;
+        normalize(&a);
+        a_perp.x = a.y;
+        a_perp.y = -a.x;
+
+        float det = a.x*b.y - b.x*a.y;
+        if(det <= 0) {
+            a_perp.x = -a_perp.x;
+            a_perp.y = -a_perp.y;
+            b_perp.x = -b_perp.x;
+            b_perp.y = -b_perp.y;
+        }
+
+        // TODO: do inner miter calculation
+
+        size_t num_pts = 4;
+        SDL_FPoint *round = malloc((1 + num_pts + 1)*sizeof(SDL_Point));
+        for(j = 0; j <= num_pts+1; ++j) {
+            float t = (float)j/(float)(num_pts+1);
+            SDL_FPoint slerp;
+            if(det > 0)
+                slerp = slerp2d(&b_perp, &a_perp, 1.0f-t);
+            else 
+                slerp = slerp2d(&a_perp, &b_perp, t);
+            round[j].x = cur->x + (slerp.x * w);
+            round[j].y = cur->y + (slerp.y * w);
+        }
+
+        for(j = 0; j < num_pts+1; ++j)
+        {
+            glVertex2i(cur->x, cur->y);
+            if(det > 0) {
+                glVertex2f(round[j+1].x, round[j+1].y);
+                glVertex2f(round[j+0].x, round[j+0].y);
+            }
+            else {
+                glVertex2f(round[j+0].x, round[j+0].y);
+                glVertex2f(round[j+1].x, round[j+1].y);
+            }
+        }
+        free(round);
+    }
+    glEnd();
 }

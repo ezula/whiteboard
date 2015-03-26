@@ -71,7 +71,10 @@ int main(int argc, char* argv[]) {
     window = SDL_CreateWindow("Whiteboard", 100, 100, 640, 480, SDL_WINDOW_SHOWN);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
-    enableAntiAliasing();
+    // enableAntiAliasing();    
+    // SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    // SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+    // SDL_GL_CreateContext(window);
 
     if (argc != 3) {
         printf("Too few arguments!\nUsage: ./whiteboard ip port\n");
@@ -112,7 +115,7 @@ int main(int argc, char* argv[]) {
                         shape->color.g = rand() % 255;
                         shape->color.b = rand() % 255;
                         shape->color.a = 255;
-                        shape->thickness = 5;
+                        shape->thickness = 25;
                         state = STATE_DRAWING;
 
                         
@@ -161,9 +164,8 @@ int main(int argc, char* argv[]) {
             realfps = fpscount;  
             fpscount = 0; 
             fpsClock = time(NULL);
+            printf("FPS: %d\n", realfps);
         }
-
-        printf("FPS: %d\n", realfps);
 
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
         SDL_RenderClear(renderer);
