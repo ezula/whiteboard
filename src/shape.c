@@ -76,12 +76,14 @@ void addPoint(Shape *shape, const SDL_Point point) {
 
 void drawShapeCallback(void * renderer, void * shape) {
     Shape *s = (Shape *)shape;
-
+    if (s->count < 1) return;
     //glEnable(GL_LINE_SMOOTH);
     SDL_SetRenderDrawColor(renderer, s->color.r, s->color.g, s->color.b, s->color.a);
-    //glLineWidth(s->thickness);
-    //SDL_RenderDrawLines(renderer, s->points, s->count);
-    glPolyline(s);
+    //Draw a single point so that SDL sets up the renderer correctly.
+    //Otherwise, the proper openGL functions are not called.    
+    SDL_RenderDrawPoint(renderer, s->points[0].x, s->points[0].y);
+
+    drawLine(s);
 }
 
 int freeShapeCallback(void * shape) {
@@ -126,7 +128,7 @@ void normalize(SDL_FPoint *p) {
     p->y = p->y * invlen;
 }
 
-void glPolyline(const Shape *shape) {
+void drawLine(const Shape *shape) {
     if(shape->count < 2) return;
     size_t i, j;
     float w = shape->thickness / 2.0f;

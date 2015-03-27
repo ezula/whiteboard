@@ -19,6 +19,6 @@ void removeRedundantPoints(Shape *shape);
 void addPoint(Shape *shape, const SDL_Point point);
 void drawShapeCallback(void * renderer, void * shape);
 int freeShapeCallback(void * shape);
-void glPolyline(const Shape *s);
+void drawLine(const Shape *s);
 
 #endif

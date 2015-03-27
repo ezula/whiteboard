@@ -13,7 +13,7 @@ TARGET = $(BINDIR)whiteboard
 
 UNAME  = $(shell uname)
 ifeq ($(UNAME), Linux)
-  SDL = -lSDL2 -lGL -lSDL2_net
+  SDL = -lSDL2 -lGL -lSDL2_net -lm
 endif
 ifeq ($(UNAME), Darwin)
   SDL = -framework SDL2 -framework OpenGL -framework SDL2_net
